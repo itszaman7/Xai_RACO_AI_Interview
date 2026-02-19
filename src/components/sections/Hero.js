@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { ArrowRight } from "lucide-react";
-import { motion, useScroll, useTransform, useMotionValue, useSpring } from "framer-motion";
+import { motion, useScroll, useTransform } from "framer-motion";
 
 const BlockGlobe = dynamic(() => import("@/components/canvas/BlockGlobe"), {
   ssr: false,
@@ -128,16 +128,15 @@ export default function Hero() {
   return (
     <section
       ref={sectionRef}
-      className="relative h-screen flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-black"
+      className="relative min-h-[100dvh] flex flex-col items-center justify-center text-center px-4 overflow-hidden bg-black"
     >
       {/* Grid overlay */}
       <div className="absolute inset-0 bg-grid z-0 opacity-20 pointer-events-none" />
 
       {/* 3D Globe */}
       <motion.div 
-        className="absolute inset-0 z-0 pointer-events-none"
+        className="absolute inset-0 z-0 pointer-events-auto cursor-grab active:cursor-grabbing"
         style={{ 
-          // Removed y and scale to prevent awkward scrolling jumps
           opacity: globeOpacity,
           perspective: "1000px" 
         }}
@@ -149,7 +148,7 @@ export default function Hero() {
 
       {/* Hero Copy — parallax on scroll */}
       <motion.div
-        className="relative z-20 max-w-5xl mx-auto space-y-8 pass-through"
+        className="relative z-20 w-full max-w-7xl mx-auto space-y-8 pass-through px-6"
         style={{ y: textY, opacity: textOpacity }}
       >
         {/* Version badge */}
@@ -166,29 +165,45 @@ export default function Hero() {
               transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
             />
             <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-300">
-              System v2.4 Available
+              Xai Intelligence Workspace
             </span>
           </div>
         </motion.div>
 
-        {/* Headline — clipped text reveal */}
-        <div className="overflow-hidden">
+        {/* Headline — clipped text reveal + Hover Shine */}
+        <div className="overflow-visible cursor-default pointer-events-auto">
           <motion.h1
-            className="text-6xl md:text-8xl font-bold tracking-tighter leading-[0.95]"
+            className="text-5xl md:text-7xl lg:text-8xl font-bold tracking-tight leading-[1.1]"
           >
             {["Turn Raw Data into", "Actionable Intelligence"].map((line, i) => (
-              <span key={i} className="block overflow-hidden">
-                <motion.span
-                  className="block text-transparent bg-clip-text bg-gradient-to-b from-white via-white to-white/60"
+              <span key={i} className="block overflow-hidden py-4 -my-4">
+                <motion.div
+                  className="flex flex-wrap md:flex-nowrap justify-center gap-x-[0.25em]" // md:flex-nowrap forces single line on desktop
                   custom={i}
                   initial="hidden"
                   animate="visible"
                   variants={lineVariants}
                 >
-                  {line}
-                </motion.span>
+                  {line.split(" ").map((word, wI) => (
+                    <motion.span
+                      key={wI}
+                      className="block text-transparent bg-clip-text bg-gradient-to-r from-zinc-500 via-white to-zinc-500 bg-[length:200%_auto]"
+                      initial={{ backgroundPosition: "0% 0%" }}
+                      whileHover={{ 
+                        backgroundPosition: "-100% 0%",
+                        transition: { duration: 0.6, ease: "linear" }
+                      }}
+                      style={{ backgroundPosition: "0% 0%" }}
+                    >
+                      {word}
+                    </motion.span>
+                  ))}
+                </motion.div>
               </span>
             ))}
+            {/* Metallic shine effect: Zinc-500 -> White -> Zinc-500. 
+                Hover moves the 'White' center across the word. 
+                gap-x-[0.25em] ensures natural spacing. */}
           </motion.h1>
         </div>
 

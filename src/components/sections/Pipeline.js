@@ -187,11 +187,12 @@ function CardVisual({ id, color }) {
    --------------------------------------------------------------- */
 function PipelineCard({ feature }) {
   return (
-    <div className="w-full h-full flex items-center justify-center p-6 md:p-12">
+    <div className="w-full h-full flex items-center justify-center p-4 md:p-12">
       <div
-        className="card-inner relative overflow-hidden rounded-[40px] border border-white/10 bg-black/80 backdrop-blur-3xl w-full max-w-6xl shadow-2xl group transition-colors duration-500"
+        className="card-inner relative overflow-hidden rounded-[32px] md:rounded-[40px] border border-white/10 bg-black/80 backdrop-blur-3xl w-full max-w-6xl shadow-2xl group transition-colors duration-500"
         style={{
-          height: "min(600px, 85vh)",
+          height: "auto",
+          minHeight: "min(500px, 70vh)",
         }}
       >
         <div className="relative z-10 grid grid-cols-1 lg:grid-cols-2 h-full">
@@ -199,19 +200,19 @@ function PipelineCard({ feature }) {
           <div className="p-8 md:p-16 flex flex-col justify-center">
             <Reveal yOffset={10}>
               <div
-                className="text-4xl font-mono font-bold mb-6 opacity-30"
+                className="text-3xl md:text-4xl font-mono font-bold mb-4 md:mb-6 opacity-30"
                 style={{ color: feature.color }}
               >
                 {feature.id}
               </div>
             </Reveal>
             <Reveal delay={100} yOffset={20}>
-              <h2 className="text-4xl md:text-5xl font-bold text-white mb-6 leading-tight tracking-tight">
+              <h2 className="text-3xl md:text-5xl font-bold text-white mb-4 md:mb-6 leading-tight tracking-tight">
                 {feature.title}
               </h2>
             </Reveal>
             <Reveal delay={200} yOffset={20}>
-              <p className="text-zinc-300 text-lg leading-relaxed mb-10 max-w-md">
+              <p className="text-zinc-300 text-base md:text-lg leading-relaxed mb-8 md:mb-10 max-w-md">
                 {feature.desc}
               </p>
             </Reveal>
@@ -355,18 +356,18 @@ export default function Pipeline() {
 
       <div className="relative z-10">
       {/* Heading */}
-      <div className="max-w-6xl mx-auto px-6 mb-24 text-left">
+      {/* Heading */}
+      <div className="max-w-6xl mx-auto px-6 mb-24 text-center flex flex-col items-center">
         <Reveal>
-          <div className="inline-flex items-center gap-3 mb-6">
-            <div className="h-px w-8 bg-zinc-800" />
-            <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.2em]">Architecture</span>
+          <div className="inline-flex items-center gap-3 mb-6 px-3 py-1 rounded-full border border-white/10 bg-white/5 backdrop-blur-sm">
+            <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-[0.2em] px-2">Architecture</span>
           </div>
         </Reveal>
         <Reveal delay={100}>
-          <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight">The Intelligence Pipeline</h2>
+          <h2 className="text-4xl md:text-5xl font-bold mb-4 tracking-tight text-white">The Intelligence Pipeline</h2>
         </Reveal>
         <Reveal delay={200}>
-          <p className="text-zinc-500 max-w-sm">From raw chaos to structured form via automated spatial reasoning.</p>
+          <p className="text-zinc-500 max-w-lg mx-auto text-lg leading-relaxed">From raw chaos to structured form via automated spatial reasoning.</p>
         </Reveal>
       </div>
 

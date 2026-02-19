@@ -290,29 +290,10 @@ function GlobeScene() {
 
   // Motion response to cursor
   useFrame((state) => {
-    if (!groupRef.current) return;
-
-    // Map mouse position (-1 to 1) to subtle rotation angles
-    // Reduced sensitivity from 0.4/0.3 to 0.15/0.1 for a calmer feel
-    const mouseX = state.mouse.x;
-    const mouseY = state.mouse.y;
-
-    // Smoothly interpolate towards mouse target
-    targetRotation.current.y = THREE.MathUtils.lerp(
-      targetRotation.current.y,
-      mouseX * 0.15,
-      0.03 // Slower lerp for more weight
-    );
-    targetRotation.current.x = THREE.MathUtils.lerp(
-      targetRotation.current.x,
-      -mouseY * 0.1,
-      0.03
-    );
-
-    // Apply smooth mouse rotation + constant very slow spin
-    groupRef.current.rotation.y += 0.0012; // Slowed down from 0.002
-    groupRef.current.rotation.y += (targetRotation.current.y - groupRef.current.rotation.y) * 0.03;
-    groupRef.current.rotation.x += (targetRotation.current.x - groupRef.current.rotation.x) * 0.03;
+    // Constant auto-rotation
+    if (groupRef.current) {
+      groupRef.current.rotation.y += 0.002;
+    }
   });
 
   return (
@@ -321,16 +302,17 @@ function GlobeScene() {
         enableZoom={false}
         enablePan={false}
         enableDamping
-        dampingFactor={0.03} // Even smoother damping
-        rotateSpeed={0.3}     // Less aggressive user rotation
-        // Removed autoRotate because we're handling specialized cursor-aware motion manually
+        dampingFactor={0.05}
+        rotateSpeed={0.5}
         minPolarAngle={Math.PI / 4}
         maxPolarAngle={Math.PI / 1.5}
       />
 
       <fogExp2 attach="fog" args={[0x000000, 0.02]} />
 
-      <group ref={groupRef}>
+      <group 
+        ref={groupRef}
+      >
         {/* Base sphere (dark water) */}
         <mesh>
           <sphereGeometry args={[GLOBE_RADIUS - 0.2, 64, 64]} />
