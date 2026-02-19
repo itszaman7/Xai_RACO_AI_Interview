@@ -7,6 +7,10 @@ import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { motion, useMotionValue, useSpring } from "framer-motion";
 import { ArrowRight } from "lucide-react";
 import Reveal from "@/components/ui/Reveal";
+import dynamic from "next/dynamic";
+
+const MorphingGeometry = dynamic(() => import("@/components/canvas/MorphingGeometry"), { ssr: false });
+import { Canvas } from "@react-three/fiber";
 
 if (typeof window !== "undefined") {
   gsap.registerPlugin(ScrollTrigger);
@@ -185,7 +189,7 @@ function PipelineCard({ feature }) {
   return (
     <div className="w-full h-full flex items-center justify-center p-6 md:p-12">
       <div
-        className="card-inner relative overflow-hidden rounded-[40px] border border-white/10 bg-black w-full max-w-6xl shadow-2xl group transition-colors duration-500"
+        className="card-inner relative overflow-hidden rounded-[40px] border border-white/10 bg-black/80 backdrop-blur-3xl w-full max-w-6xl shadow-2xl group transition-colors duration-500"
         style={{
           height: "min(600px, 85vh)",
         }}
@@ -263,16 +267,31 @@ function PipelineCard({ feature }) {
 /* ---------------------------------------------------------------
    Pipeline — GSAP ScrollTrigger stacking cards
    --------------------------------------------------------------- */
+/* ---------------------------------------------------------------
+   Pipeline — GSAP ScrollTrigger stacking cards
+   --------------------------------------------------------------- */
 export default function Pipeline() {
   const containerRef = useRef(null);
+  const progressRef = useRef(0); // Mutable ref for 3D sync
 
   useGSAP(
     () => {
       const cards = gsap.utils.toArray(".pipeline-card");
       ScrollTrigger.refresh();
 
+      // Track total scroll progress of the container
+      ScrollTrigger.create({
+        trigger: containerRef.current,
+        start: "top top",
+        end: "bottom bottom",
+        scrub: true,
+        onUpdate: (self) => {
+          progressRef.current = self.progress;
+        }
+      });
+
       cards.forEach((card, index) => {
-        // Animate previous card
+        // Animate previous card (Card Leave Animation)
         if (index === cards.length - 1) return;
 
         const tl = gsap.timeline({
@@ -286,13 +305,13 @@ export default function Pipeline() {
 
         // 1. Scale and Rotate as it leaves
         tl.to(card, {
-          scale: 0.7, // More dramatic reduction
+          scale: 0.7, 
           borderRadius: "48px",
           ease: "none",
         }).to(
           card,
           {
-            rotation: index % 2 === 0 ? 4 : -4, // Stronger rotation
+            rotation: index % 2 === 0 ? 4 : -4, 
             ease: "sine.inOut",
           },
           0
@@ -304,7 +323,7 @@ export default function Pipeline() {
             opacity: 0,
             scrollTrigger: {
               trigger: cards[index + 1],
-              start: "top 50%", // Start fading when next card is halfway up
+              start: "top 50%", 
               end: "top top",
               scrub: true,
             },
@@ -318,8 +337,23 @@ export default function Pipeline() {
   return (
     <section
       ref={containerRef}
-      className="bg-black relative z-10 py-24"
+      className="bg-black relative z-10 py-24 min-h-[300vh]"
     >
+      {/* Signature Interaction: Morphing 3D Background */}
+      <div className="absolute inset-0 w-full h-full z-0 pointer-events-none">
+         <div className="sticky top-0 h-screen w-full overflow-hidden">
+            <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-10" />
+            <Canvas camera={{ position: [0, 0, 40], fov: 45 }} gl={{ alpha: true, antialias: true }}>
+               <ambientLight intensity={0.5} />
+               {/* Shift to the right to be visible beside the cards */}
+               <group position={[14, 0, 0]}>
+                 <MorphingGeometry scrollProgress={progressRef} />
+               </group>
+            </Canvas>
+         </div>
+      </div>
+
+      <div className="relative z-10">
       {/* Heading */}
       <div className="max-w-6xl mx-auto px-6 mb-24 text-left">
         <Reveal>
@@ -349,6 +383,7 @@ export default function Pipeline() {
             <PipelineCard feature={feature} />
           </div>
         ))}
+      </div>
       </div>
     </section>
   );

@@ -121,8 +121,8 @@ export default function Hero() {
   const textOpacity = useTransform(scrollYProgress, [0, 0.3], [1, 0]);
 
   // Globe parallax: sinks slightly, scales up, and fades out
-  const globeY = useTransform(scrollYProgress, [0, 0.8], [0, 150]);
-  const globeScale = useTransform(scrollYProgress, [0, 0.8], [1, 1.5]);
+  // const globeY = useTransform(scrollYProgress, [0, 0.8], [0, 150]); // Disabled per user request
+  // const globeScale = useTransform(scrollYProgress, [0, 0.8], [1, 1.5]); // Disabled
   const globeOpacity = useTransform(scrollYProgress, [0, 0.6], [0.6, 0]);
 
   return (
@@ -137,8 +137,7 @@ export default function Hero() {
       <motion.div 
         className="absolute inset-0 z-0 pointer-events-none"
         style={{ 
-          y: globeY, 
-          scale: globeScale, 
+          // Removed y and scale to prevent awkward scrolling jumps
           opacity: globeOpacity,
           perspective: "1000px" 
         }}
