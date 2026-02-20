@@ -12,28 +12,102 @@ import {
 import { motion, AnimatePresence } from "framer-motion";
 import Reveal from "@/components/ui/Reveal";
 
+import { useLayoutEffect } from "react";
+import gsap from "gsap";
+import { ScrollTrigger } from "gsap/ScrollTrigger";
+
+gsap.registerPlugin(ScrollTrigger);
+
 /* ---------------------------------------------------------------
    Chart data points
    --------------------------------------------------------------- */
-const purplePoints = [
-  { x: 0, y: 85, val: "91 Actions" },
-  { x: 16.66, y: 78, val: "95 Actions" },
-  { x: 33.33, y: 75, val: "98 Actions" },
-  { x: 50, y: 45, val: "119 Actions" },
-  { x: 66.66, y: 38, val: "123 Actions" },
-  { x: 83.33, y: 20, val: "136 Actions" },
-  { x: 100, y: 12, val: "142 Actions" },
-];
+// Initial data for charts
+const initialPurple = [85, 78, 75, 45, 38, 20, 12];
+const initialBlue = [90, 85, 80, 55, 50, 30, 18];
 
-const bluePoints = [
-  { x: 0, y: 90, val: "87 Flows" },
-  { x: 16.66, y: 85, val: "91 Flows" },
-  { x: 33.33, y: 80, val: "94 Flows" },
-  { x: 50, y: 55, val: "112 Flows" },
-  { x: 66.66, y: 50, val: "115 Flows" },
-  { x: 83.33, y: 30, val: "129 Flows" },
-  { x: 100, y: 18, val: "137 Flows" },
-];
+// Helper to generate smooth SVG path
+function getSmoothPath(values, width = 700, height = 200) {
+  const points = values.map((v, i) => [
+    (i / (values.length - 1)) * width,
+    v
+  ]);
+
+  return points.reduce((acc, [x, y], i, arr) => {
+    if (i === 0) return `M ${x},${y}`;
+    const [px, py] = arr[i - 1];
+    const cp1x = px + (x - px) / 2; // Control point 1
+    const cp2x = px + (x - px) / 2; // Control point 2
+    return `${acc} C ${cp1x},${py} ${cp2x},${y} ${x},${y}`;
+  }, "");
+}
+
+function LiveAreaChart({ initialData, color, id }) {
+  const [data, setData] = useState(initialData);
+
+  useLayoutEffect(() => {
+    const interval = setInterval(() => {
+      setData((prev) => {
+        const next = [...prev.slice(1)];
+        // Generate new value based on last value with some random variance
+        const last = prev[prev.length - 1];
+        let newValue = last + (Math.random() - 0.5) * 40;
+        newValue = Math.max(10, Math.min(190, newValue)); // Clamp to chart height
+        next.push(newValue);
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const pathD = getSmoothPath(data);
+  const areaD = `${pathD} L 700,200 L 0,200 Z`;
+
+  return (
+    <>
+      <defs>
+        <linearGradient id={`${id}-grad`} x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+          <stop offset="100%" stopColor={color} stopOpacity="0" />
+        </linearGradient>
+      </defs>
+      
+      {/* Area */}
+      <motion.path
+        d={areaD}
+        fill={`url(#${id}-grad)`}
+        animate={{ d: areaD }}
+        transition={{ duration: 1, ease: "linear" }}
+      />
+      
+      {/* Line */}
+      <motion.path
+        d={pathD}
+        fill="none"
+        stroke={color}
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        style={{ filter: `drop-shadow(0 0 6px ${color}80)` }}
+        animate={{ d: pathD }}
+        transition={{ duration: 1, ease: "linear" }}
+      />
+
+      {/* Points */}
+      {data.map((val, i) => (
+        <motion.circle
+          key={i}
+          cx={(i / (data.length - 1)) * 700}
+          cy={val}
+          r="4"
+          fill="#050505"
+          stroke="#fff"
+          strokeWidth="2"
+          animate={{ cy: val }}
+          transition={{ duration: 1, ease: "linear" }}
+        />
+      ))}
+    </>
+  );
+}
 
 const SIDEBAR_ITEMS = [
   { label: "Overview", icon: Layers },
@@ -44,31 +118,84 @@ const SIDEBAR_ITEMS = [
 
 const STATS = [
   {
-    title: "Active Automations",
-    value: "18",
-    sub: "+2 from yesterday",
+    title: "Live Workflows",
+    value: "24",
+    sub: "+4 active now",
     subColor: "text-emerald-400",
     accentColor: "#10b981",
     Icon: Layers,
   },
   {
-    title: "Agent Actions",
-    value: "125",
-    sub: "+12.5%",
+    title: "Decisions Executed",
+    value: "8,942",
+    sub: "+12.5% vs 1h ago",
     subColor: "text-violet-400",
     accentColor: "#8b5cf6",
     Icon: Zap,
   },
   {
-    title: "Time Saved",
-    value: "350",
-    unit: "min",
-    sub: "↑ 24% this week",
+    title: "Optimization Rate",
+    value: "99.8%",
+    sub: "↑ 0.4% efficiency",
     subColor: "text-sky-400",
     accentColor: "#0ea5e9",
     Icon: Activity,
   },
 ];
+
+/* ---------------------------------------------------------------
+   Terminal Log Component
+   --------------------------------------------------------------- */
+function TerminalLog() {
+  const [logs, setLogs] = useState([
+    { id: 1, text: "Initializing neural weights...", type: "info" },
+    { id: 2, text: "Connected to data stream: port 8080", type: "success" },
+    { id: 3, text: "Optimizing tensor graph...", type: "warning" },
+  ]);
+
+  useLayoutEffect(() => {
+    const interval = setInterval(() => {
+      const actions = [
+        { text: "Pattern detected: anomalous vector", type: "warning" },
+        { text: "Re-calibrating confidence score", type: "info" },
+        { text: "Decision node executed: routed to agent_04", type: "success" },
+        { text: "Ingesting batch #4920...", type: "info" },
+        { text: "Latency optimization: -12ms", type: "success" },
+      ];
+      const randomAction = actions[Math.floor(Math.random() * actions.length)];
+      setLogs(prev => [...prev.slice(-4), { id: Date.now(), ...randomAction }]);
+    }, 2500);
+    return () => clearInterval(interval);
+  }, []);
+
+  return (
+    <div className="mt-auto border-t border-white/5 pt-4">
+      <div className="text-[10px] uppercase tracking-wider text-zinc-500 mb-2 font-bold px-1">
+        Live Logs
+      </div>
+      <div className="bg-black/40 rounded-lg border border-white/5 p-3 text-[10px] font-mono h-32 overflow-hidden flex flex-col justify-end">
+        <AnimatePresence mode="popLayout">
+          {logs.map((log) => (
+            <motion.div
+              key={log.id}
+              initial={{ opacity: 0, x: -10 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0 }}
+              className="mb-1 last:mb-0"
+            >
+              <span className={
+                log.type === "success" ? "text-emerald-400" :
+                log.type === "warning" ? "text-yellow-400" : "text-zinc-400"
+              }>
+                {">"} {log.text}
+              </span>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
 
 
 
@@ -104,16 +231,30 @@ export default function Dashboard() {
   return (
     <section className="py-32 bg-black relative z-10">
       <div className="max-w-7xl mx-auto px-4 md:px-8">
-        <Reveal>
-          <div className="mb-12 text-center">
-            <h2 className="text-2xl md:text-3xl font-medium tracking-tight mb-2">
+        <div className="mb-20 text-center relative">
+          <div ref={(el) => {
+            if (!el) return;
+            gsap.fromTo(el, 
+              { scale: 0.8, opacity: 0.2, y: 50 },
+              { 
+                scale: 1, opacity: 1, y: 0,
+                scrollTrigger: {
+                  trigger: el,
+                  start: "top 80%",
+                  end: "bottom 50%",
+                  scrub: 1,
+                }
+              }
+            );
+          }}>
+            <h2 className="text-4xl md:text-6xl font-medium tracking-tight mb-4 bg-gradient-to-b from-white to-white/40 bg-clip-text text-transparent">
               Precision Control
             </h2>
-            <p className="text-zinc-400 text-sm">
+            <p className="text-zinc-400 text-lg md:text-xl max-w-2xl mx-auto">
               Real-time visibility into your tensor operations.
             </p>
           </div>
-        </Reveal>
+        </div>
 
         <Reveal delay={200} yOffset={40}>
           {/* Mobile: Container is scaled down to fit */}
@@ -184,17 +325,7 @@ export default function Dashboard() {
                       ))}
                     </div>
 
-                    <div className="mt-auto">
-                      <div className="px-3 py-3 bg-black/40 rounded-lg border border-white/5">
-                        <div className="text-[10px] text-zinc-400 mb-1">
-                          System Status
-                        </div>
-                        <div className="flex items-center gap-2 text-xs text-green-400">
-                          <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_#22c55e]" />
-                          Operational
-                        </div>
-                      </div>
-                    </div>
+                    <TerminalLog />
                   </div>
 
                   {/* ---- Main Content ---- */}
@@ -363,164 +494,16 @@ export default function Dashboard() {
                           viewBox="0 0 700 200"
                           preserveAspectRatio="xMidYMid meet"
                         >
-                          <defs>
-                            <linearGradient
-                              id="purple-grad"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="0%"
-                                stopColor="#a855f7"
-                                stopOpacity="0.35"
-                              />
-                              <stop
-                                offset="100%"
-                                stopColor="#a855f7"
-                                stopOpacity="0"
-                              />
-                            </linearGradient>
-                            <linearGradient
-                              id="blue-grad"
-                              x1="0"
-                              y1="0"
-                              x2="0"
-                              y2="1"
-                            >
-                              <stop
-                                offset="0%"
-                                stopColor="#3b82f6"
-                                stopOpacity="0.35"
-                              />
-                              <stop
-                                offset="100%"
-                                stopColor="#3b82f6"
-                                stopOpacity="0"
-                              />
-                            </linearGradient>
-                          </defs>
-
-                          {/* Area fills */}
-                          <path
-                            d="M0,170 C58,170 58,156 117,156 C175,156 175,150 233,150 C292,150 292,90 350,90 C408,90 408,76 467,76 C525,76 525,40 583,40 C642,40 642,24 700,24 L700,200 L0,200 Z"
-                            fill="url(#purple-grad)"
+                          <LiveAreaChart 
+                            initialData={initialPurple} 
+                            color="#a855f7" 
+                            id="purple" 
                           />
-                          <path
-                            d="M0,180 C58,180 58,170 117,170 C175,170 175,160 233,160 C292,160 292,110 350,110 C408,110 408,100 467,100 C525,100 525,60 583,60 C642,60 642,36 700,36 L700,200 L0,200 Z"
-                            fill="url(#blue-grad)"
+                          <LiveAreaChart 
+                            initialData={initialBlue} 
+                            color="#3b82f6" 
+                            id="blue" 
                           />
-
-                          {/* Lines */}
-                          <path
-                            d="M0,170 C58,170 58,156 117,156 C175,156 175,150 233,150 C292,150 292,90 350,90 C408,90 408,76 467,76 C525,76 525,40 583,40 C642,40 642,24 700,24"
-                            fill="none"
-                            stroke="#a855f7"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            style={{ filter: "drop-shadow(0 0 6px #a855f780)" }}
-                          />
-                          <path
-                            d="M0,180 C58,180 58,170 117,170 C175,170 175,160 233,160 C292,160 292,110 350,110 C408,110 408,100 467,100 C525,100 525,60 583,60 C642,60 642,36 700,36"
-                            fill="none"
-                            stroke="#3b82f6"
-                            strokeWidth="2.5"
-                            strokeLinecap="round"
-                            style={{ filter: "drop-shadow(0 0 6px #3b82f680)" }}
-                          />
-
-                          {/* Data points — purple line */}
-                          {[
-                            { cx: 0, cy: 170 },
-                            { cx: 117, cy: 156 },
-                            { cx: 233, cy: 150 },
-                            { cx: 350, cy: 90 },
-                            { cx: 467, cy: 76 },
-                            { cx: 583, cy: 40 },
-                            { cx: 700, cy: 24 },
-                          ].map((pt, i) => (
-                            <g key={`p-${i}`}>
-                              <circle
-                                cx={pt.cx}
-                                cy={pt.cy}
-                                r="5"
-                                fill="#050505"
-                                stroke="#fff"
-                                strokeWidth="2.5"
-                                className="cursor-pointer"
-                                style={{
-                                  filter:
-                                    "drop-shadow(0 0 4px rgba(255,255,255,0.3))",
-                                }}
-                                onMouseEnter={() =>
-                                  setHoveredPoint(purplePoints[i])
-                                }
-                                onMouseLeave={() => setHoveredPoint(null)}
-                              />
-                              {hoveredPoint === purplePoints[i] && (
-                                <foreignObject
-                                  x={pt.cx - 50}
-                                  y={pt.cy - 40}
-                                  width="100"
-                                  height="30"
-                                  className="overflow-visible pointer-events-none"
-                                >
-                                  <div className="flex justify-center">
-                                    <span className="bg-white text-black text-[10px] font-bold px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap">
-                                      {purplePoints[i].val}
-                                    </span>
-                                  </div>
-                                </foreignObject>
-                              )}
-                            </g>
-                          ))}
-
-                          {/* Data points — blue line */}
-                          {[
-                            { cx: 0, cy: 180 },
-                            { cx: 117, cy: 170 },
-                            { cx: 233, cy: 160 },
-                            { cx: 350, cy: 110 },
-                            { cx: 467, cy: 100 },
-                            { cx: 583, cy: 60 },
-                            { cx: 700, cy: 36 },
-                          ].map((pt, i) => (
-                            <g key={`b-${i}`}>
-                              <circle
-                                cx={pt.cx}
-                                cy={pt.cy}
-                                r="5"
-                                fill="#050505"
-                                stroke="#fff"
-                                strokeWidth="2.5"
-                                className="cursor-pointer"
-                                style={{
-                                  filter:
-                                    "drop-shadow(0 0 4px rgba(255,255,255,0.3))",
-                                }}
-                                onMouseEnter={() =>
-                                  setHoveredPoint(bluePoints[i])
-                                }
-                                onMouseLeave={() => setHoveredPoint(null)}
-                              />
-                              {hoveredPoint === bluePoints[i] && (
-                                <foreignObject
-                                  x={pt.cx - 50}
-                                  y={pt.cy - 40}
-                                  width="100"
-                                  height="30"
-                                  className="overflow-visible pointer-events-none"
-                                >
-                                  <div className="flex justify-center">
-                                    <span className="bg-white text-black text-[10px] font-bold px-2.5 py-1 rounded-md shadow-xl whitespace-nowrap">
-                                      {bluePoints[i].val}
-                                    </span>
-                                  </div>
-                                </foreignObject>
-                              )}
-                            </g>
-                          ))}
                         </svg>
                       </div>
                     </div>
