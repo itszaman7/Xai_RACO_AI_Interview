@@ -133,8 +133,8 @@ const InsightMatrix = () => {
         probe.add(probeGlow);
         scene.add(probe);
 
-        // Invisible bounding box for raycasting (Big enough to catch mouse events for the whole screen essentially)
-        const hitBoxGeo = new THREE.BoxGeometry(100, 100, 10);
+        // Invisible bounding box for raycasting (Matched closely to the 3D shape size)
+        const hitBoxGeo = new THREE.SphereGeometry(18, 32, 32);
         const hitBox = new THREE.Mesh(hitBoxGeo, new THREE.MeshBasicMaterial({visible: false}));
         scene.add(hitBox);
 
@@ -151,7 +151,7 @@ const InsightMatrix = () => {
             // This prevents the ghost core from sticking when moving off-screen to the right.
             if (e.clientX <= 5 || e.clientY <= 5 || e.clientX >= window.innerWidth - 5 || e.clientY >= window.innerHeight - 5) {
                 isMouseActive = false;
-                targetProbePos.set(0,0,0);
+                targetProbePos.copy(mesh.position);
             }
             
             // We'll calculate mouse relative to window since canvas covers window
@@ -164,7 +164,7 @@ const InsightMatrix = () => {
             if (intersects.length > 0 && isMouseActive) {
                 targetProbePos.copy(intersects[0].point);
             } else if (isMouseActive) {
-                targetProbePos.set(0,0,0);
+                targetProbePos.copy(mesh.position);
             }
         };
 
@@ -173,7 +173,7 @@ const InsightMatrix = () => {
             if (!e.relatedTarget) {
                 isMouseActive = false;
                 mouse.set(-100, -100);
-                targetProbePos.set(0, 0, 0);
+                targetProbePos.copy(mesh.position);
             }
         };
 
