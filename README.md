@@ -48,7 +48,7 @@ Built with a strict focus on a clean component structure, reusable UI elements, 
 
 ## Key Evaluative Decisions
 
-> **[🎥 Watch the Video Walkthrough](To be uploaded)**  
+> **[🎥 Watch the Video Walkthrough](https://drive.google.com/file/d/1iWn4UXrmpjrt7WLkddeO3lyPwen0fJRK/view?usp=sharing)**  
 > *A short explanation of the key animation and interaction decisions behind this project.*
 
 ### 1. Signature Interaction: Morphing Data Cluster (`InsightMatrix.js`)
